@@ -1,0 +1,878 @@
+{
+  "name": "Telegram Workflow Migration",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=✅ 您的美食研究報告已寄出！\n📧 請查看您的 Gmail 信箱。"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        -144
+      ],
+      "id": "ef3e7ce6-09c7-4ac8-bd75-78a3538764fa",
+      "name": "Reply Email Success",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ⚠️ Configuration: Add Allowed Group IDs here\nconst allowedGroups = [\n  'C_GROUP_ID_1_HERE', // Support Group 1\n  'C_GROUP_ID_2_HERE', // Support Group 2\n];\n\nconst event = items[0].json.message;\nconst sourceId = event.chat.id;\nconst sourceType = event.chat.type; // private, group, supergroup\n\n// 1. Allow Direct Messages (LINE OA itself / 1-on-1)\nif (sourceType === 'user') {\n  return items;\n}\n\n// 2. Allow Specific Groups\nif (allowedGroups.includes(sourceId)) {\n  return items;\n}\n\n// 3. Block everything else\nreturn [];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -144
+      ],
+      "id": "e2035c52-59e3-4f1d-8896-0ee001fa3e12",
+      "name": "Check Apify Permission"
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = items[0].json.message;\nconst sourceId = event.chat.id;\n\n// ⚠️ Configuration: Map Group IDs to Folder IDs here\nconst folderMap = {\n  // 'Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx': 'QQQ', // Group 1 (Example)\n  'GroupID': 'FolderId', // Group 2\n  'GroupID': 'FolderId', // Group 3\n};\n\n// Default folder if no match found\nconst defaultFolderId = '1SaRNq3fl-A7s6lkP5Ai8swt6wwYrViNm'; \n\nreturn [{\n  json: {\n    ...items[0].json,\n    targetFolderId: folderMap[sourceId] || defaultFolderId,\n    sourceId: sourceId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        240
+      ],
+      "id": "1e6cf77e-edb6-4a53-815f-051fe31b1c69",
+      "name": "Determine Folder1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-condition-1",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "id",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "id-condition-2",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "getid",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "3f8b75a6-e63a-4585-8ac5-5f96e171b6f2",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "查詢id",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        432
+      ],
+      "id": "e99bf875-24f2-401c-b889-2be4eaf0dea2",
+      "name": "Filter Get ID1"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=🆔 您的 Group ID / User ID 是：\n\n{{ $json.message.chat.id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        432
+      ],
+      "id": "03cef4c5-1614-490a-bd1b-61c948721c71",
+      "name": "Reply Group ID1",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "download": true
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -464,
+        48
+      ],
+      "id": "80050fcd-a149-4e07-bc3d-0a8d8e77e5e8",
+      "name": "Telegram Trigger",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "898d6739-9749-4534-8982-e4247dca20c5",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "好評推薦：",
+              "operator": {
+                "type": "string",
+                "operation": "contains",
+                "name": "filter.operator.stringContains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        -144
+      ],
+      "id": "d4449998-a1ba-443a-ba45-1bb575f65de4",
+      "name": "Filter Apify"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "t-img",
+              "leftValue": "={{ $json.message.photo ? true : false }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "t-vid",
+              "leftValue": "={{ $json.message.video ? true : false }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "t-doc",
+              "leftValue": "={{ $json.message.document ? true : false }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        240
+      ],
+      "id": "2f21db7e-ac9f-4ce5-8a0d-8c43a0ed215b",
+      "name": "Filter Drive"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.message.document?.file_name || 'telegram_file_' + $now.format('yyyyMMdd_HHmmss') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Determine Folder1').item.json.targetFolderId }}",
+          "mode": "id"
+        },
+        "options": {},
+        "binaryPropertyName": "data"
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        240
+      ],
+      "id": "df6b16cd-7ade-4a5e-a072-b0b8cec8620f",
+      "name": "Google Drive Upload",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Tsa85c1FrxPovjnT",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=✅ 檔案已成功上傳至 Google Drive！\n📁 檔名: {{ $json.name }}\n📎連結：{{ $json.webViewLink }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        240
+      ],
+      "id": "17d0a7e7-d63d-49fd-9d81-93f7f9a08069",
+      "name": "Reply Upload Success",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        896,
+        32
+      ],
+      "id": "e9162872-6d79-4e64-9828-c234bc339563",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6Bc95LfzovgkVOuw",
+          "name": "Google Gemini(PaLM) Api account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "actorId": {
+          "__rl": true,
+          "value": "nwua9Gu5YrADL7ZDj",
+          "mode": "list",
+          "cachedResultName": "Google Maps Scraper (compass/crawler-google-places)",
+          "cachedResultUrl": "https://console.apify.com/actors/nwua9Gu5YrADL7ZDj/input"
+        },
+        "customBody": "={\n  \"searchStringsArray\": [\n\"{{ $('Telegram Trigger').item.json.message.text.replace('好評推薦：', '').trim() }}\"\n  ],\n  \"locationName\": \"Taiwan\",\n  \"maxCrawledPlacesPerSearch\": 50, \n  \"language\": \"zh-TW\",\n  \"minRating\": 4.2, \n  \"maxReviews\": 10,\n  \"reviewsSort\": \"newest\",\n  \"includeReviews\": true,\n  \"reviewsStartDate\": \"1 month\"\n}"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -144
+      ],
+      "id": "13689e02-8861-4705-9eb8-42ed82f19535",
+      "name": "Run an Actor",
+      "credentials": {
+        "apifyApi": {
+          "id": "ZCobVbIMQT5hQDsE",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=你是一位專業的美食雜誌編輯。以下是本月「{{ $('Telegram Trigger').item.json.message.text }}」的最新數據資料庫： {{ JSON.stringify($json) }}\n請為我撰寫一份「{{ $('Telegram Trigger').item.json.message.text }}」。請分析數據，挑選出「近期評論最熱絡」且「位於該地區」的前 10 名。\n【嚴格過濾條件】\n排除任何明顯非目標地區的地址。\n必須推薦滿 10 間，不足則有多少列多少。\n【輸出格式要求】 請直接輸出一份完整的 HTML Email 代碼 (不要包含 ```html 標記)：\n整體佈局：\n背景使用淺灰色 (#f5f5f5)，主容器寬度上限 600px，置中對齊。\n標題下方每一間店佔用一個白色背景 (#ffffff) 的橫向卡片。\n卡片排版 (橫向並排)：\n使用 <table> 標籤實現「左圖右文」。\n左側欄 (圖片)：寬度佔 40%。使用 imageUrl，設定 border-radius: 8px;，確保圖片充滿容器且不變形 (object-fit: cover)。\n右側欄 (資訊)：寬度佔 60%，左邊距 15px。\n🏠 店名：字體加粗，顏色 #333333。\n⭐ 評分優化：使用 HTML 實體符號 &#9733; 代替 Emoji。樣式：color: #ffcc00; font-size: 16px; font-weight: bold; line-height: 1;（確保星星邊緣銳利不糊掉）。\n📍 地址：顯示 address，字級略小。\n📝 推薦理由：綜合 reviews 分析，用 25 字內繁體中文精簡描述亮點。\n🔗 按鈕：在右下角顯示一個藍色背景的「查看地圖」小按鈕。\n樣式約束：\n卡片之間設定 15px 的間距。\n卡片需有圓角 10px 與細微陰影。"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        880,
+        -144
+      ],
+      "id": "3e836092-e55c-4697-9635-7af32e4de651",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "sendTo": "your mail@gmail.com",
+        "subject": "={{ $('Telegram Trigger').item.json.message.text }} {{ $today.format('yyyy年MM月') }}",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1232,
+        -144
+      ],
+      "id": "8544352b-569b-4d72-8d0c-095f00b6e4c5",
+      "name": "Send a message",
+      "webhookId": "7d656d28-21f6-4363-a381-10e5c39bb75f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iENbOjqN7MHSsJNg",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "title, totalScore, reviewsCount, reviews, address, url, imageUrl",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -144
+      ],
+      "id": "1d23c82b-b10e-4ed0-9e35-241dc67e9c41",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}",
+        "offset": {}
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -144
+      ],
+      "id": "22ed593d-c60f-4ebb-8235-69d920396738",
+      "name": "Get dataset items",
+      "credentials": {
+        "apifyApi": {
+          "id": "ZCobVbIMQT5hQDsE",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ⚠️ Configuration: Add Allowed Group IDs here\nconst allowedGroups = [\n  'C_GROUP_ID_1_HERE', // Support Group 1\n  'C_GROUP_ID_2_HERE', // Support Group 2\n];\n\nconst event = items[0].json.message;\nconst sourceId = event.chat.id;\nconst sourceType = event.chat.type; // private, group, supergroup\n\n// 1. Allow Direct Messages (LINE OA itself / 1-on-1)\nif (sourceType === 'user') {\n  return items;\n}\n\n// 2. Allow Specific Groups\nif (allowedGroups.includes(sourceId)) {\n  return items;\n}\n\n// 3. Block everything else\nreturn [];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        48
+      ],
+      "id": "285c3871-b0e7-4734-af50-85cb56f0c6c5",
+      "name": "Check Voice Permission1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "t-voice",
+              "leftValue": "={{ $json.message.voice ? true : false }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        48
+      ],
+      "id": "77af8d7c-71a7-4fd8-8d4d-e5401a78aa88",
+      "name": "Filter Audio1"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=語音紀錄：{{ $json.content.parts[0].text.replace('請幫我將這段語音逐字轉錄為繁體中文。', '').replace(/\n/g, ' ').trim() }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        48
+      ],
+      "id": "1130329e-7eac-4bb3-bd30-e160152f33f4",
+      "name": "HTTP Request Audio Reply1",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "請幫我將這段語音逐字轉錄為「繁體中文」。",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        432,
+        48
+      ],
+      "id": "6001c966-cee9-458a-81d0-bacd867724e8",
+      "name": "Analyze audio1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "6Bc95LfzovgkVOuw",
+          "name": "Google Gemini(PaLM) Api account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1d8be8c4-a3f2-4911-aa95-f242555aa0a1",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "help",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "31278152-d17b-4022-9dfd-b633bfac0f23",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "說明",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "2b6ea93d-4c3e-4dca-847e-2cf0eb82db2e",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "功能",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        -336
+      ],
+      "id": "7dc1abf9-90d2-45e0-b6f7-c208d0e51cc1",
+      "name": "Filter Help"
+    },
+    {
+      "parameters": {
+        "resource": "workflow",
+        "operation": "get",
+        "workflowId": "={{ $workflow.id }}"
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -336
+      ],
+      "id": "32ebdafb-c8c7-43a9-8f9f-b98a1a3cc807",
+      "name": "Get Workflow Details",
+      "credentials": {
+        "n8nApi": {
+          "id": "YOUR_N8N_CREDENTIAL_ID_HERE",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $('Telegram Trigger').item.json.message;\nconst sourceType = event.chat.type; // private, group, supergroup\nconst nodes = $input.item.json.nodes;\n\nlet groupCommands = [];\nlet privateCommands = [];\n\nfor (const node of nodes) {\n  if (node.type === 'n8n-nodes-base.filter' && node.parameters?.conditions?.conditions) {\n    const conditions = node.parameters.conditions.conditions;\n    const triggers = conditions.map(c => c.rightValue).filter(v => v !== undefined && v !== '');\n    \n    if (triggers.length > 0) {\n      let triggerText = triggers.map(t => `'${t}'`).join(' 或 ');\n      let desc = '';\n      let isGroupFriendly = false;\n      \n      if (node.name.includes('Apify')) {\n        desc = '🔍 尋找 Google Maps 上評分熱絡的高評價點 (背後串接 Apify 與 Gemini分析)\\n   格式：好評推薦：[地點或餐廳]';\n        isGroupFriendly = true;\n      } else if (node.name.includes('Get ID')) {\n        desc = '🆔 讀取當前的 LINE User ID 或 Group ID (開發者常用)';\n        isGroupFriendly = true;\n      } else if (node.name.includes('Help')) {\n         continue;\n      } else {\n        desc = `⚙️ 觸發工作流特定功能 (${node.name})`;\n      }\n      \n      const cmdStr = `🔹 輸入 ${triggerText}\\n   ${desc}`;\n      privateCommands.push(cmdStr);\n      if (isGroupFriendly) groupCommands.push(cmdStr);\n    }\n  }\n}\n\n// Add file types triggers manually as they are not simple text equals\nconst fileDesc = `🔹 傳送 [圖片/影片/檔案]\\n   📂 自動備份該檔案至特定的 Google Drive 資料夾`;\nprivateCommands.push(fileDesc);\n\nconst audioDesc = `🔹 傳送 [語音訊息]\\n   🎙️ 利用 Gemini ASR 自動辨識語音並回傳逐字稿 (支援特定群組與私訊)`;\nprivateCommands.push(audioDesc);\ngroupCommands.push(audioDesc);\n\nlet helpMessage = '🤖 【自動化助理功能清單】\\n======================\\n';\n\nif (sourceType === 'group' || sourceType === 'supergroup') {\n  helpMessage += '👥 目前在【群組】環境，以下是推薦使用的功能：\\n\\n';\n  helpMessage += groupCommands.join('\\n\\n');\n  helpMessage += '\\n\\n⚠️ 注意：某些功能 (如檔案備份) 在群組可能被限制或無效。';\n} else {\n  helpMessage += '👤 目前在【私訊】環境，您可使用以下完整功能：\\n\\n';\n  helpMessage += privateCommands.join('\\n\\n');\n}\n\nreturn { json: { helpMessage: helpMessage } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        -336
+      ],
+      "id": "ac886470-8ff9-49dd-a01b-cfa2b98242f2",
+      "name": "Build Help Message"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.helpMessage }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        -336
+      ],
+      "id": "e30ae1fc-fcd8-4033-bad6-7a87e07eb443",
+      "name": "Reply Help Context",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check Apify Permission": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Folder1": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Get ID1": {
+      "main": [
+        [
+          {
+            "node": "Reply Group ID1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Apify": {
+      "main": [
+        [
+          {
+            "node": "Check Apify Permission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Drive": {
+      "main": [
+        [
+          {
+            "node": "Determine Folder1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File Content": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Upload": {
+      "main": [
+        [
+          {
+            "node": "Reply Upload Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor": {
+      "main": [
+        [
+          {
+            "node": "Get dataset items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Reply Email Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get dataset items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Voice Permission1": {
+      "main": [
+        [
+          {
+            "node": "Analyze audio1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Audio1": {
+      "main": [
+        [
+          {
+            "node": "Check Voice Permission1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Audio DL1": {
+      "main": [
+        [
+          {
+            "node": "Analyze audio1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze audio1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Audio Reply1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Help": {
+      "main": [
+        [
+          {
+            "node": "Get Workflow Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Workflow Details": {
+      "main": [
+        [
+          {
+            "node": "Build Help Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Help Message": {
+      "main": [
+        [
+          {
+            "node": "Reply Help Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter Help",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Apify",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Get ID1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Audio1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b55918e4-ef7c-4058-a624-8a70ec83807e",
+  "meta": {
+    "instanceId": "f93e3951419d64314c8e8ef0f53e89a433f6d0b3e81963288ee8a2f0e1ef26b3"
+  },
+  "id": "RZbr70jQMwIenLAZhlW9S",
+  "tags": []
+}
